@@ -1,0 +1,222 @@
+service: zoho-api
+
+provider:
+  name: aws
+  runtime: python3.8
+  region: us-east-1
+  environment:
+    BUCKET: ${self:resources.Resources.ZohoBucket.Properties.BucketName}
+    SECRET_ID: zoho-api
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - secretsmanager:GetSecretValue
+        - secretsmanager:PutSecretValue
+        - s3:PutObject
+        - s3:CreateBucket
+      Resource: '*'
+
+#layers:
+#  ${file(layers.yml)}
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+
+package:
+  exclude:
+    - app/functions/**
+#    - venv/**
+    - node_modules/**
+  individually: true
+
+resources:
+  Resources:
+    ZohoBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.stage}-zoho-reports
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+
+functions:
+  accounts:
+    handler: app/functions/accounts.main
+    events:
+      - schedule:
+          rate: rate(4 hours)
+          enabled: true
+    package:
+      include:
+        - app/functions/accounts.py
+        - app/functions/utils/zoho_auth.py
+
+  agents:
+    handler: app/functions/agents.main
+    events:
+      - schedule:
+          rate: rate(4 hours)
+          enabled: true
+    package:
+      include:
+        - app/functions/agents.py
+        - app/functions/utils/zoho_auth.py
+
+  calls:
+    handler: app/functions/calls.main
+    events:
+      - schedule:
+          rate: rate(4 hours)
+          enabled: true
+    package:
+      include:
+        - app/functions/calls.py
+        - app/functions/utils/zoho_auth.py
+
+  contacts:
+    handler: app/functions/contacts.main
+    events:
+      - schedule:
+          rate: rate(4 hours)
+          enabled: true
+    package:
+      include:
+        - app/functions/contacts.py
+        - app/functions/utils/zoho_auth.py
+
+  departments:
+    handler: app/functions/departments.main
+    events:
+      - schedule:
+          rate: rate(4 hours)
+          enabled: true
+    package:
+      include:
+        - app/functions/departments.py
+        - app/functions/utils/zoho_auth.py
+
+  notification-pending_approvals:
+    handler: app/functions/notification-pending_approvals.main
+    events:
+      - schedule:
+          rate: rate(4 hours)
+          enabled: true
+    package:
+      include:
+        - app/functions/notification-pending_approvals.py
+        - app/functions/utils/zoho_auth.py
+
+  notification-email_delivery_failures:
+    handler: app/functions/notification-email_delivery_failures.main
+    events:
+      - schedule:
+          rate: rate(4 hours)
+          enabled: true
+    package:
+      include:
+        - app/functions/notification-email_delivery_failures.py
+        - app/functions/utils/zoho_auth.py
+
+  threads:
+    handler: app/functions/threads.main
+    events:
+      - schedule:
+          rate: rate(4 hours)
+          enabled: true
+    package:
+      include:
+        - app/functions/threads.py
+        - app/functions/utils/zoho_auth.py
+
+  tickets:
+    handler: app/functions/tickets.main
+    events:
+      - schedule:
+          rate: rate(4 hours)
+          enabled: true
+    package:
+      include:
+        - app/functions/tickets.py
+        - app/functions/utils/zoho_auth.py
+
+  ticket_tags:
+    handler: app/functions/ticket_tags.main
+    events:
+      - schedule:
+          rate: rate(4 hours)
+          enabled: true
+    package:
+      include:
+        - app/functions/ticket_tags.py
+        - app/functions/utils/zoho_auth.py
+
+# These endpoints are not available in the trial version of Zoho Desk, but are in working order. The data may need to be
+# manipulated some when real testing can be done, depending on how Zoho returns it.
+#  queue-by_status:
+#    handler: queue-by_status.main
+#    module: app/functions
+#    events:
+#      - schedule:
+#          rate: rate(1 minute)
+#          enabled: true
+#    package:
+#      include:
+#        - app/functions/queue-by_status.py
+#    layers:
+#      - {Ref: AuthenticateLambdaLayer}
+
+#  ticket_time_entry:
+#    handler: ticket_time_entry.main
+#    module: app/functions
+#    events:
+#      - schedule:
+#          rate: rate(1 day)
+#          enabled: true
+#          input:
+#            ticket_id: 511401000000141411
+#    package:
+#      include:
+#        - app/functions/ticket_time_entry.py
+#    layers:
+#      - {Ref: AuthenticateLambdaLayer}
+
+#  customer_happiness:
+#    handler: customer_happiness.main
+#    module: app/functions
+#    events:
+#      - schedule:
+#          rate: rate(1 minute)
+#          enabled: true
+#    package:
+#      include:
+#        - app/functions/customer_happiness.py
+#    layers:
+#      - {Ref: AuthenticateLambdaLayer}
+#  test:
+#      handler: test.main
+#      module: app/functions
+#      package:
+#        include:
+#          - app/functions/test.py
+#
+#  agent_time_entry:
+#    handler: agent_time_entry.main
+#    module: app/functions
+#    events:
+#      - schedule:
+#          rate: rate(1 minute)
+#          enabled: true
+##          input:
+##            agent_id: 717614760
+#    package:
+#      include:
+#        - app/functions/agent_time_entry.py
+#    layers:
+#      - {Ref: AuthenticateLambdaLayer}
+
